@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrintCalc UV</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+:root {
+--olive-deep:#3D5A40; --sage-soft:#A6B8A0;
+--beige-linen:#F3F0EB; --olive-wood:#B98C59; --soft-black:#1C1C1C;
+}
+
+*{box-sizing:border-box;}
+
+body{
+font-family:-apple-system,system-ui,sans-serif;
+background:var(--soft-black);
+color:var(--beige-linen);
+margin:0;
+padding:10px;
+display:flex;
+justify-content:center;
+}
+
+.card{
+background:var(--olive-deep);
+padding:16px;
+border-radius:20px;
+width:100%;
+max-width:420px;
+box-shadow:0 20px 40px rgba(0,0,0,0.6);
+border:1px solid var(--olive-wood);
+}
+
+.logo{
+display:block;
+margin:0 auto 20px auto;
+max-width:130px;
+}
+
+h2{text-align:center;font-size:1.1rem;margin-bottom:20px;border-bottom:1px solid var(--olive-wood);padding-bottom:10px}
+
+.field{margin-bottom:12px}
+label{font-size:.75rem;color:var(--sage-soft);font-weight:700}
+
+input{
+width:100%;
+padding:10px;
+border-radius:10px;
+border:1px solid var(--sage-soft);
+background:#1C1C1C;
+color:#fff;
+font-size:.95rem;
+}
+
+.row{display:flex;gap:10px;margin:20px 0}
+.btn{flex:1;padding:12px;border:none;border-radius:10px;background:var(--olive-wood);font-weight:900}
+
+.result{background:#000;padding:1.5rem;border-radius:15px;text-align:center;border:1px solid var(--olive-wood)}
+.big{font-size:2.2rem;font-weight:900}
+.small{font-size:.7rem;color:var(--sage-soft)}
+.sep{height:1px;background:var(--olive-deep);margin:15px 0}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<img src="logo.png" class="logo">
+
+<h2>Calculette Produit UV</h2>
+
+<div class="field"><label>Prix Support (€)</label><input id="pS" type="number" value="0"></div>
+<div class="field"><label>Prix Cartouche (€)</label><input id="pC" type="number" value="45"></div>
+<div class="field"><label>Contenance (ml)</label><input id="vC" type="number" value="100"></div>
+<div class="field"><label>Consommation d'encre (ml)</label><input id="conso" type="number" step="0.01" value="0.50"></div>
+<div class="field"><label>Maintenance (€ / print)</label><input id="maint" type="number" value="0.55"></div>
+
+<div class="sep"></div>
+
+<div class="field"><label>Prix de Vente (€)</label><input id="sale" type="number" value="0"></div>
+<div class="field"><label>Marge Cible (%)</label><input id="target" type="number" value="70"></div>
+
+<div class="row">
+<button class="btn" onclick="mult(2)">Coef x2</button>
+<button class="btn" onclick="mult(3)">Coef x3</button>
+</div>
+
+<div class="result">
+<div class="big" id="cost">0.00 €</div>
+<div class="small">Coût de revient</div>
+<div class="sep"></div>
+<div class="big" id="margin">0.00 €</div>
+<div class="small" id="pct">Marge: 0%</div>
+<div class="sep"></div>
+<div class="big" id="suggested" style="color:var(--sage-soft)">0.00 €</div>
+<div class="small">Prix conseillé</div>
+</div>
+
+</div>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+const ids=["pS","pC","vC","conso","maint","sale","target"];
+const fixedMachine=2699;
+
+function v(id){return parseFloat(document.getElementById(id).value)||0}
+
+function calc(){
+let pS=v('pS'),pC=v('pC'),vC=v('vC')||1,conso=v('conso'),maint=v('maint'),sale=v('sale');
+let total=pS+((pC/vC)*conso)+(fixedMachine/10000)+maint;
+document.getElementById('cost').innerText=total.toFixed(2)+" €";
+let margin=sale-total;
+let pct=sale>0?(margin/sale)*100:0;
+document.getElementById('margin').innerText=margin.toFixed(2)+" €";
+document.getElementById('pct').innerText="Marge: "+pct.toFixed(1)+"%";
+let target=v('target')/100;
+if(target>0&&target<1){
+let suggested=total/(1-target);
+document.getElementById('suggested').innerText=suggested.toFixed(2)+" €";
+}
+}
+
+function mult(x){
+let total=parseFloat(document.getElementById('cost').innerText)||0;
+document.getElementById('sale').value=(total*x).toFixed(2);
+calc();
+}
+
+ids.forEach(id=>document.getElementById(id).addEventListener("input",calc));
+calc();
+</script>
+
+</body>
+</html>
